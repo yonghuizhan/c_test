@@ -1,0 +1,25 @@
+ex1:
+a.int 
+b.double
+c.double
+d.double
+e.double
+f.double
+g.double
+h.double
+i.long double
+
+ex2:
+
+a.age
+b.weight
+c.radius_of_cycle
+d.annual_salary
+e.price
+f.highest_score
+g.temperature
+h.person_net_worth
+i.distance_to_a_planet
+
+ex3:
+ex4:非法：a,d,f,
