@@ -53,6 +53,7 @@ HUFFMAN *freqhuf(int *count,char *goalfile)
             index++; 
         }
     }
+    fclose(fpin);
     return result;//返回了一个储存了字符对应asiic码和对于频率的结构数组.
 
 }
@@ -139,7 +140,127 @@ int searchmin( Huff *freq, int count )
     return minindex;
 }
 
+void buildhufcode(int root,int index,Huff *freq,char *str)
+{
+    if ( freq[root].left != -1 && freq[root].right != -1 ) 
+    {
+        str[index] = '1';
+        buildhufode(freq[root].left,index+1,freq,str );
+        str[index] = '0';
+        buildhufcode(freq[root].right,index+1,freq,str );
+    }
+    else 
+    {
+        str[index] = 0;
+        strcpy(freq[index].code ,str);
+    }
 
+}
+#define CLR_BYTER(value,index) ((value) &= (~(1 << (index)^7)))
+#define SET_BYTER(value,index) ((value) |= (1 << (index)^7))
+#define GET_BYTER(value,index) (((value) & (1 << ((index)^7))) !=0 )
+typedef unsigned char u8;
+
+typedef struct message{
+
+    u8 ishuf[3];
+    u8 count;
+    u8 lastindex;
+    char passward;
+}MESSAGE;
+
+void creatcodefile(Huff *freq,int count,char *goalfile,char *resultfile,HUFFMAN *storefreq)
+{
+    FILE *fpout;
+    FILE *fpin;
+    u8  value;
+    int i;
+    int index;
+    const char *hufcode;
+    int arr[256];
+    int ch;
+    int password;
+    MESSAGE headcode = {'M','u','f'};
+    
+    if ((fpout = fopen(goalfile,"rb")) == NULL)
+        puts("error opening file");
+    if ((fpin = fopen(resultfile,"wb") == NULL))
+        puts("error writting file");
+    headcode.count = (u8)(count +1)/2;
+    headcode.lastindex = howlongchar(freq,count);
+
+    fwrite(&headcode,sizeof(MESSAGE),1,fpout);
+    fwrite(storefreq,sizeof(HUFFMAN),(count +1)/2,fpout);
+    for ( i = 0; i< count ;i++)
+    {
+        arr[freq[i].freq.character] = i;
+    }
+     ch = fgetc(fpin);
+     while(!feof(fpin))
+     {
+        hufcode = freq[arr[ch]].code;
+        for( i = 0; hufcode[i]; i++ ) 
+        {
+            if (hufcode[i] == '0')
+            {
+                CLR_BYTER(value,index);
+            }
+            if (hufcode[i] == '1')
+            {
+                SET_BYTER(value,index);
+            }
+            if (++index >= 8)
+            {
+                index = 0;
+                fwrite( &value,1,1,fpout);
+            }
+            ch = fgetc(fpin);
+        }
+        if (index)
+        {
+            fwrite(&value,1,1,fpout);
+        }
+     }
+    fclose(fpin);
+    fclose(fpout);
+}
+
+int howlongchar(Huff *freq,int count)
+{
+    int i;
+    int sum = 0;
+
+    for ( i= 0; i < (count+1)/2;i++ )
+    {
+        sum = sum +strlen(freq[i].code);
+        sum &= 0xFF;
+    }
+    return sum % 8 == 0 ? 8 : sum %8;
+}
+
+int main()
+{
+    int count = 0;
+    char goalfile[50];
+    char resultfile[50];
+    HUFFMAN *information;
+    Huff *freq;
+    char *str;
+    FILE *fpin;
+    FILE *fpout;
+    int i;
+
+    puts("Enter the source file");
+    gets(goalfile);
+
+    puts("Enter the result file name");
+    gets(resultfile);
+
+    if ((fpin = fopen(goalfile,"w")) == NULL)
+        puts("Error opening source file\n");
+    fclose(fpin);
+    
+}
 
 
 
